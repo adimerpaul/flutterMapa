@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:mimapa/pages/page2.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../services/location_service.dart';
@@ -59,6 +60,26 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text('Home'),
       ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            ListTile(
+              title: Text('Mi ubicación'),
+              onTap: () {
+                miUbicacion();
+              },
+            ),
+            ListTile(
+              title: Text('Pagina 2'),
+              onTap: () {
+                Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => Page2())
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           ListView.builder(
@@ -82,6 +103,7 @@ class _HomeState extends State<Home> {
                   // String url = 'https://router.project-osrm.org/route/v1/driving/$lng,$lat;$lngDestino,$latDestino?geometries=geojson';
                   String url = 'https://router.project-osrm.org/route/v1/driving/${position.longitude},${position.latitude};${locations[index]['longitude']},${locations[index]['latitude']}?geometries=geojson';
                   final response = await http.get(Uri.parse(url));
+                  // reutrnShowDialog(context, response.body);
 
                   final data = json.decode(response.body);
                   final List<dynamic> coordinates = data['routes'][0]['geometry']['coordinates'];
@@ -129,9 +151,13 @@ class _HomeState extends State<Home> {
                   markers: [
                     Marker(
                       point: LatLng(lat, lon),
-                      width: 25,
-                      height: 25,
-                      child: Icon(Icons.location_on, color: Colors.red),
+                      width: 70,
+                      height: 70,
+                      child: GestureDetector(child: Icon(Icons.location_on, color: Colors.red),
+                        onTap: () {
+                          print('Ubicacion actual');
+                        },
+                      ),
                     ),
                   ],
                 ),
