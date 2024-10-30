@@ -4,6 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../services/location_service.dart';
+
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -16,13 +18,21 @@ class _HomeState extends State<Home> {
   MapController _mapController = MapController();
   var lat = -17.969667;
   var lon = -67.114658;
+  List locations = [];
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     permission();
-    miUbicacion();
+    // miUbicacion();
+    getLocations();
+  }
+  getLocations() async {
+    var locations = await LocationService().getLocations();
+    print(locations);
+    setState(() {
+      this.locations = locations;
+    });
   }
   permission() async {
     var status = await Permission.location.status;
@@ -45,36 +55,69 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text('Home'),
       ),
-      body: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: LatLng(lat, lon),
-          initialZoom: 13,
-        ),
+      body: Column(
         children: [
-          TileLayer( // Display map tiles from any source
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // OSMF's Tile Server
-            userAgentPackageName: 'com.example.app',
-            // And many more recommended properties!
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: locations.length,
+            itemBuilder: (context, index) {
+              // return ListTile(
+              //   title: Text(locations[index]['name']),
+              //   subtitle: Text(locations[index]['city']),
+              //   onTap: () {
+              //     setState(() {
+              //       lat = double.parse(locations[index]['latitude']);
+              //       lon = double.parse(locations[index]['longitude']);
+              //     });
+              //     _mapController.move(LatLng(lat, lon), 6);
+              //   },
+              // );
+              return ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    lat = double.parse(locations[index]['latitude']);
+                    lon = double.parse(locations[index]['longitude']);
+                  });
+                  _mapController.move(LatLng(lat, lon), 6);
+                },
+                child: Text(locations[index]['name']),
+              );
+            },
           ),
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: LatLng(lat, lon),
-                width: 25,
-                height: 25,
-                child: Icon(Icons.location_on, color: Colors.red),
+          Expanded(
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: LatLng(lat, lon),
+                initialZoom: 6,
               ),
-            ],
-          ),
-          RichAttributionWidget( // Include a stylish prebuilt attribution widget that meets all requirments
-            attributions: [
-              TextSourceAttribution(
-                'OpenStreetMap contributors',
-                onTap: () => print('OpenStreetMap contributors'),
-              ),
-              // Also add images...
-            ],
+              children: [
+                TileLayer( // Display map tiles from any source
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // OSMF's Tile Server
+                  userAgentPackageName: 'com.example.app',
+                  // And many more recommended properties!
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(lat, lon),
+                      width: 25,
+                      height: 25,
+                      child: Icon(Icons.location_on, color: Colors.red),
+                    ),
+                  ],
+                ),
+                RichAttributionWidget( // Include a stylish prebuilt attribution widget that meets all requirments
+                  attributions: [
+                    TextSourceAttribution(
+                      'OpenStreetMap contributors',
+                      onTap: () => print('OpenStreetMap contributors'),
+                    ),
+                    // Also add images...
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       )
